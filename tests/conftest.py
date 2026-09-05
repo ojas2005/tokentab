@@ -2,6 +2,13 @@ from __future__ import annotations
 
 import pytest
 
+from tokentab import PricingRegistry
+
+
+@pytest.fixture
+def registry() -> PricingRegistry:
+    return PricingRegistry()
+
 
 class FakeAnthropicResponse:
     """Shape of anthropic.types.Message."""
