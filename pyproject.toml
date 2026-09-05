@@ -1,0 +1,94 @@
+[build-system]
+requires = ["hatchling>=1.18"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tokentab"
+version = "0.1.0"
+description = "Cost estimation and budget enforcement for LLM API calls."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Ojas Tiwari", email = "tiwariojas4@gmail.com" }]
+keywords = ["llm", "cost", "budget", "tokens", "openai", "anthropic", "gemini", "langchain"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = []
+
+[project.optional-dependencies]
+tiktoken = ["tiktoken>=0.5"]
+anthropic = ["anthropic>=0.30"]
+pandas = ["pandas>=1.3"]
+langchain = ["langchain-core>=0.2"]
+all = ["tiktoken>=0.5", "anthropic>=0.30", "pandas>=1.3", "langchain-core>=0.2"]
+dev = [
+    "pytest>=7.0",
+    "mypy>=1.8",
+    "ruff>=0.4",
+    "build>=1.0",
+    "twine>=5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ojas2005/tokentab"
+Repository = "https://github.com/ojas2005/tokentab"
+Issues = "https://github.com/ojas2005/tokentab/issues"
+Changelog = "https://github.com/ojas2005/tokentab/blob/main/CHANGELOG.md"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tokentab"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/README.md", "/LICENSE", "/CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error::RuntimeWarning"]
+
+[tool.mypy]
+python_version = "3.9"
+strict = true
+files = ["src/tokentab"]
+warn_unreachable = true
+no_implicit_reexport = false
+
+[[tool.mypy.overrides]]
+module = "tokentab.integrations.langchain"
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = ["tiktoken.*", "pandas.*", "langchain_core.*", "anthropic.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF", "A"]
+# The 3.9 floor rules out PEP 585/604 syntax in runtime positions, so typing.Dict
+# and typing.Optional stay.
+ignore = [
+    "UP006",   # non-pep585-annotation (Dict -> dict)
+    "UP007",   # non-pep604-annotation-union (Union -> |)
+    "UP035",   # deprecated-import (typing.Dict etc.)
+    "UP045",   # non-pep604-annotation-optional (Optional -> | None)
+    "RUF022",  # __all__ is grouped by topic on purpose, not alphabetized
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Nested `with` blocks keep pytest.raises scoped to the exact statement under test.
+"tests/*" = ["SIM117", "E501"]
