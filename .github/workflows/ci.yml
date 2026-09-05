@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        include:
+          - os: macos-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install with all extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,all]"
+      - run: pytest -q
+      - run: mypy
+      - run: ruff check .
+
+  core-only:
+    # The core must work with nothing but the standard library installed.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+      - run: pip install -e . pytest
+      - name: Fail if any optional extra got pulled in
+        run: |
+          python - <<'PY'
+          import importlib.util as u
+          leaked = [m for m in ("tiktoken", "pandas", "langchain_core", "anthropic")
+                    if u.find_spec(m) is not None]
+          assert not leaked, f"optional packages installed by the core: {leaked}"
+          PY
+      - run: pytest -q
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - run: python -m build
+      - run: twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
