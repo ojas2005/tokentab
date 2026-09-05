@@ -1,0 +1,60 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "currency": "USD",
+    "unit": "per_million_tokens",
+    "as_of": "2026-09-05",
+    "note": "Public list prices, best effort. Provider prices change without notice and may differ for your account (enterprise rates, batch discounts, long-context tiers, regional cloud resellers). Override with PricingRegistry.load_file()/register() or the TOKENTAB_PRICING_FILE environment variable before relying on these numbers for billing."
+  },
+  "models": {
+    "claude-opus-4-5": {"provider": "anthropic", "input": 5.0, "output": 25.0, "cache_read": 0.5, "cache_write": 6.25},
+    "claude-opus-4-1": {"provider": "anthropic", "input": 15.0, "output": 75.0, "cache_read": 1.5, "cache_write": 18.75},
+    "claude-opus-4": {"provider": "anthropic", "input": 15.0, "output": 75.0, "cache_read": 1.5, "cache_write": 18.75},
+    "claude-sonnet-4-5": {"provider": "anthropic", "input": 3.0, "output": 15.0, "cache_read": 0.3, "cache_write": 3.75},
+    "claude-sonnet-4": {"provider": "anthropic", "input": 3.0, "output": 15.0, "cache_read": 0.3, "cache_write": 3.75},
+    "claude-haiku-4-5": {"provider": "anthropic", "input": 1.0, "output": 5.0, "cache_read": 0.1, "cache_write": 1.25},
+    "claude-3-7-sonnet": {"provider": "anthropic", "input": 3.0, "output": 15.0, "cache_read": 0.3, "cache_write": 3.75},
+    "claude-3-5-sonnet": {"provider": "anthropic", "input": 3.0, "output": 15.0, "cache_read": 0.3, "cache_write": 3.75},
+    "claude-3-5-haiku": {"provider": "anthropic", "input": 0.8, "output": 4.0, "cache_read": 0.08, "cache_write": 1.0},
+    "claude-3-opus": {"provider": "anthropic", "input": 15.0, "output": 75.0, "cache_read": 1.5, "cache_write": 18.75},
+    "claude-3-sonnet": {"provider": "anthropic", "input": 3.0, "output": 15.0, "cache_read": 0.3, "cache_write": 3.75},
+    "claude-3-haiku": {"provider": "anthropic", "input": 0.25, "output": 1.25, "cache_read": 0.03, "cache_write": 0.3},
+
+    "gpt-5": {"provider": "openai", "input": 1.25, "output": 10.0, "cache_read": 0.125},
+    "gpt-5-mini": {"provider": "openai", "input": 0.25, "output": 2.0, "cache_read": 0.025},
+    "gpt-5-nano": {"provider": "openai", "input": 0.05, "output": 0.4, "cache_read": 0.005},
+    "gpt-4.1": {"provider": "openai", "input": 2.0, "output": 8.0, "cache_read": 0.5},
+    "gpt-4.1-mini": {"provider": "openai", "input": 0.4, "output": 1.6, "cache_read": 0.1},
+    "gpt-4.1-nano": {"provider": "openai", "input": 0.1, "output": 0.4, "cache_read": 0.025},
+    "gpt-4o": {"provider": "openai", "input": 2.5, "output": 10.0, "cache_read": 1.25},
+    "gpt-4o-mini": {"provider": "openai", "input": 0.15, "output": 0.6, "cache_read": 0.075},
+    "o3": {"provider": "openai", "input": 2.0, "output": 8.0, "cache_read": 0.5},
+    "o3-mini": {"provider": "openai", "input": 1.1, "output": 4.4, "cache_read": 0.55},
+    "o4-mini": {"provider": "openai", "input": 1.1, "output": 4.4, "cache_read": 0.275},
+    "o1": {"provider": "openai", "input": 15.0, "output": 60.0, "cache_read": 7.5},
+    "o1-mini": {"provider": "openai", "input": 1.1, "output": 4.4, "cache_read": 0.55},
+    "gpt-4-turbo": {"provider": "openai", "input": 10.0, "output": 30.0},
+    "gpt-4": {"provider": "openai", "input": 30.0, "output": 60.0},
+    "gpt-3.5-turbo": {"provider": "openai", "input": 0.5, "output": 1.5},
+    "text-embedding-3-small": {"provider": "openai", "input": 0.02, "output": 0.0},
+    "text-embedding-3-large": {"provider": "openai", "input": 0.13, "output": 0.0},
+
+    "gemini-2.5-pro": {"provider": "google", "input": 1.25, "output": 10.0, "cache_read": 0.31},
+    "gemini-2.5-flash": {"provider": "google", "input": 0.3, "output": 2.5, "cache_read": 0.075},
+    "gemini-2.5-flash-lite": {"provider": "google", "input": 0.1, "output": 0.4, "cache_read": 0.025},
+    "gemini-2.0-flash": {"provider": "google", "input": 0.1, "output": 0.4, "cache_read": 0.025},
+    "gemini-2.0-flash-lite": {"provider": "google", "input": 0.075, "output": 0.3},
+    "gemini-1.5-pro": {"provider": "google", "input": 1.25, "output": 5.0, "cache_read": 0.3125},
+    "gemini-1.5-flash": {"provider": "google", "input": 0.075, "output": 0.3, "cache_read": 0.01875},
+    "gemini-1.5-flash-8b": {"provider": "google", "input": 0.0375, "output": 0.15, "cache_read": 0.01}
+  },
+  "aliases": {
+    "claude-3-5-sonnet-v2": "claude-3-5-sonnet",
+    "claude-instant": "claude-3-haiku",
+    "gpt-4o-audio-preview": "gpt-4o",
+    "chatgpt-4o": "gpt-4o",
+    "gpt-35-turbo": "gpt-3.5-turbo",
+    "gemini-pro": "gemini-1.5-pro",
+    "gemini-flash": "gemini-1.5-flash"
+  }
+}
