@@ -41,6 +41,7 @@ from .tracker import (
     default_tracker,
     set_default_tracker,
 )
+from .decorators import track_cost
 
 __version__ = "0.1.0"
 
