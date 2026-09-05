@@ -10,6 +10,7 @@ from .exceptions import (
     TokenTabError,
     UnknownModelError,
 )
+from .usage import TokenUsage, extract_usage
 
 __version__ = "0.1.0"
 
