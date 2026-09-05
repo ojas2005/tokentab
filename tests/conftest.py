@@ -2,7 +2,18 @@ from __future__ import annotations
 
 import pytest
 
-from tokentab import PricingRegistry
+from tokentab import PricingRegistry, set_default_tracker
+from tokentab.tracker import _ambient
+
+
+@pytest.fixture(autouse=True)
+def _clean_global_state():
+    """Keep the process-wide tracker/ambient stack from leaking between tests."""
+    _ambient.clear()
+    set_default_tracker(None)
+    yield
+    _ambient.clear()
+    set_default_tracker(None)
 
 
 @pytest.fixture

@@ -34,6 +34,13 @@ from .counting import (
 from .records import UsageRecord
 from .budget import BudgetGuard, BudgetLimits, BudgetStatus
 from .reporting import GroupSummary, Report
+from .tracker import (
+    CostTracker,
+    TrackedCall,
+    current_tracker,
+    default_tracker,
+    set_default_tracker,
+)
 
 __version__ = "0.1.0"
 
