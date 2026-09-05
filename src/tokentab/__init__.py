@@ -31,6 +31,7 @@ from .counting import (
     get_counter,
     set_counter,
 )
+from .records import UsageRecord
 
 __version__ = "0.1.0"
 
