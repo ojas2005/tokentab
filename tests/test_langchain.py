@@ -194,3 +194,28 @@ def test_max_tokens_makes_the_guard_stop_sooner():
         _serialized(), [[HumanMessage(content="short prompt")]], run_id=uuid4(),
         invocation_params={"model": "claude-sonnet-4-5"},
     )
+
+
+def test_handler_tag_beats_langchain_internal_tags():
+    """LangChain attaches structural tags like "seq:step:2" inside a chain.
+    Those describe graph position, not what the spend was for, so an explicit
+    handler tag must win and internal tags must never become a label."""
+    handler = TokenTabCallbackHandler(budget=1.0, tag="chain")
+    run_id = uuid4()
+    handler.on_chat_model_start(
+        _serialized(), [[HumanMessage(content="hi")]], run_id=run_id,
+        tags=["seq:step:2"], invocation_params={"model": "gpt-4o"},
+    )
+    handler.on_llm_end(_result_with_usage(100, 50), run_id=run_id)
+    assert handler.records[0].tag == "chain"
+
+
+def test_langchain_run_tag_used_when_handler_has_none():
+    handler = TokenTabCallbackHandler(budget=1.0)
+    run_id = uuid4()
+    handler.on_chat_model_start(
+        _serialized(), [[HumanMessage(content="hi")]], run_id=run_id,
+        tags=["seq:step:2", "retrieval"], invocation_params={"model": "gpt-4o"},
+    )
+    handler.on_llm_end(_result_with_usage(100, 50), run_id=run_id)
+    assert handler.records[0].tag == "retrieval"

@@ -61,6 +61,19 @@ def _message_text(message: Any) -> Dict[str, Any]:
     return {"role": str(role), "content": content}
 
 
+def _first_user_tag(tags: Optional[List[str]]) -> Optional[str]:
+    """First caller-supplied tag, skipping LangChain's internal run tags.
+
+    LangChain adds structural tags of its own inside chains ("seq:step:2",
+    "map:key:foo"). Those describe position in the graph, not what the spend was
+    for, so they must not end up as a record's label.
+    """
+    for tag in tags or []:
+        if isinstance(tag, str) and ":" not in tag:
+            return tag
+    return None
+
+
 def _model_from(serialized: Any, kwargs: Dict[str, Any]) -> str:
     """Dig the model id out of the several places LangChain puts it."""
     params = kwargs.get("invocation_params") or {}
@@ -194,7 +207,7 @@ class TokenTabCallbackHandler(_Base):
                 model,
                 messages=prompt,
                 expected_output_tokens=expected_output_tokens,
-                tag=tag or self.tag,
+                tag=self.tag or tag,
             )
         else:
             usage, _ = tracker.estimate_messages(
@@ -205,7 +218,7 @@ class TokenTabCallbackHandler(_Base):
                 "model": model,
                 "usage": usage,
                 "started": time.perf_counter(),
-                "tag": tag or self.tag,
+                "tag": self.tag or tag,
             }
 
     def _finish(self, run_id: UUID) -> Optional[Dict[str, Any]]:
@@ -227,7 +240,7 @@ class TokenTabCallbackHandler(_Base):
             run_id,
             _model_from(serialized, kwargs),
             list(prompts),
-            tags[0] if tags else None,
+            _first_user_tag(tags),
             self._output_allowance(kwargs),
         )
 
@@ -245,7 +258,7 @@ class TokenTabCallbackHandler(_Base):
             run_id,
             _model_from(serialized, kwargs),
             flattened,
-            tags[0] if tags else None,
+            _first_user_tag(tags),
             self._output_allowance(kwargs),
         )
 
