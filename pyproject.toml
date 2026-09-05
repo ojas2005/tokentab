@@ -47,6 +47,9 @@ Repository = "https://github.com/ojas2005/tokentab"
 Issues = "https://github.com/ojas2005/tokentab/issues"
 Changelog = "https://github.com/ojas2005/tokentab/blob/main/CHANGELOG.md"
 
+[project.scripts]
+tokentab = "tokentab.__main__:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/tokentab"]
 
