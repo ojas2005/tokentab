@@ -102,6 +102,11 @@ class TokenTabCallbackHandler(_Base):
     Pass an existing ``tracker=`` to share budgets with decorated functions and
     ``with CostTracker(...)`` blocks; otherwise the handler uses the innermost
     active tracker, or creates its own from the ``budget`` arguments.
+
+    The pre-call estimate budgets for the response as well as the prompt, using
+    ``expected_output_tokens`` if you pass one and the model's configured
+    ``max_tokens`` otherwise. Without either, only the prompt is priced, and a
+    session budget can overshoot by roughly one response.
     """
 
     raise_error = True
@@ -155,8 +160,32 @@ class TokenTabCallbackHandler(_Base):
         """The tracker in use: the explicit one, else the innermost active one."""
         return resolve_tracker(self._tracker)
 
-    def _start(self, run_id: UUID, model: str, prompt: MessageLike,
-               tag: Optional[str]) -> None:
+    def _output_allowance(self, kwargs: Dict[str, Any]) -> int:
+        """Tokens to budget for the response.
+
+        Output costs several times more than input, so estimating from the
+        prompt alone lets a session budget overshoot by a whole response. When
+        the caller configured ``max_tokens``, that is the true worst case, so
+        use it unless an explicit allowance was passed to the handler.
+        """
+        if self.expected_output_tokens:
+            return self.expected_output_tokens
+        params = kwargs.get("invocation_params") or {}
+        if isinstance(params, dict):
+            for key in ("max_tokens", "max_tokens_to_sample", "max_output_tokens"):
+                value = params.get(key)
+                if isinstance(value, int) and value > 0:
+                    return value
+        return 0
+
+    def _start(
+        self,
+        run_id: UUID,
+        model: str,
+        prompt: MessageLike,
+        tag: Optional[str],
+        expected_output_tokens: int = 0,
+    ) -> None:
         tracker = self.tracker
         usage = TokenUsage()
         if self.enforce:
@@ -164,12 +193,12 @@ class TokenTabCallbackHandler(_Base):
             usage, _ = tracker.preflight(
                 model,
                 messages=prompt,
-                expected_output_tokens=self.expected_output_tokens,
+                expected_output_tokens=expected_output_tokens,
                 tag=tag or self.tag,
             )
         else:
             usage, _ = tracker.estimate_messages(
-                prompt, model, expected_output_tokens=self.expected_output_tokens
+                prompt, model, expected_output_tokens=expected_output_tokens
             )
         with self._lock:
             self._pending[run_id] = {
@@ -199,6 +228,7 @@ class TokenTabCallbackHandler(_Base):
             _model_from(serialized, kwargs),
             list(prompts),
             tags[0] if tags else None,
+            self._output_allowance(kwargs),
         )
 
     def on_chat_model_start(
@@ -216,6 +246,7 @@ class TokenTabCallbackHandler(_Base):
             _model_from(serialized, kwargs),
             flattened,
             tags[0] if tags else None,
+            self._output_allowance(kwargs),
         )
 
     def on_llm_end(self, response: Any, *, run_id: UUID, **kwargs: Any) -> None:

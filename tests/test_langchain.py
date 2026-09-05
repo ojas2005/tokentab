@@ -167,3 +167,30 @@ def test_raise_error_flag_is_set():
     """LangChain only propagates handler exceptions when raise_error is true;
     without it BudgetExceededError would be logged and the chain would continue."""
     assert TokenTabCallbackHandler.raise_error is True
+
+
+def test_output_allowance_uses_max_tokens():
+    """Output costs more than input; budgeting from the prompt alone lets a
+    session overshoot by a whole response, so max_tokens is the better default."""
+    handler = TokenTabCallbackHandler(budget=100.0)
+    assert handler._output_allowance({"invocation_params": {"max_tokens": 4096}}) == 4096
+    assert handler._output_allowance({"invocation_params": {"max_output_tokens": 512}}) == 512
+    assert handler._output_allowance({}) == 0
+
+    explicit = TokenTabCallbackHandler(budget=100.0, expected_output_tokens=1000)
+    assert explicit._output_allowance({"invocation_params": {"max_tokens": 4096}}) == 1000
+
+
+def test_max_tokens_makes_the_guard_stop_sooner():
+    handler = TokenTabCallbackHandler(per_request=0.02)
+    # Prompt alone is cheap; prompt + 4096 output tokens on Sonnet is not.
+    with pytest.raises(BudgetExceededError):
+        handler.on_chat_model_start(
+            _serialized(), [[HumanMessage(content="short prompt")]], run_id=uuid4(),
+            invocation_params={"model": "claude-sonnet-4-5", "max_tokens": 4096},
+        )
+    # Without max_tokens the same prompt sails through.
+    handler.on_chat_model_start(
+        _serialized(), [[HumanMessage(content="short prompt")]], run_id=uuid4(),
+        invocation_params={"model": "claude-sonnet-4-5"},
+    )
