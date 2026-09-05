@@ -32,6 +32,7 @@ from .counting import (
     set_counter,
 )
 from .records import UsageRecord
+from .budget import BudgetGuard, BudgetLimits, BudgetStatus
 
 __version__ = "0.1.0"
 
