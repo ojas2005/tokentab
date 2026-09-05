@@ -61,7 +61,10 @@ testpaths = ["tests"]
 filterwarnings = ["error::RuntimeWarning"]
 
 [tool.mypy]
-python_version = "3.9"
+# No python_version pin: current mypy refuses to target 3.9, and pinning an old
+# target makes it parse third-party stubs (numpy's, via pandas) with syntax
+# rules those stubs no longer satisfy. The 3.9 floor is enforced where it
+# actually matters -- ruff's target-version and the pytest matrix.
 strict = true
 files = ["src/tokentab"]
 warn_unreachable = true
@@ -74,6 +77,12 @@ disallow_subclassing_any = false
 [[tool.mypy.overrides]]
 module = ["tiktoken.*", "pandas.*", "langchain_core.*", "anthropic.*"]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Don't type-check our optional extras' own stubs. Their internals are not our
+# contract, and a syntax change in one of them must not break our check.
+module = ["pandas.*", "numpy.*"]
+follow_imports = "skip"
 
 [tool.ruff]
 line-length = 100
