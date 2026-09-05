@@ -21,6 +21,16 @@ from .pricing import (
     detect_provider,
     normalize_model,
 )
+from .counting import (
+    AnthropicCounter,
+    HeuristicCounter,
+    TiktokenCounter,
+    TokenCounter,
+    count_message_tokens,
+    count_tokens,
+    get_counter,
+    set_counter,
+)
 
 __version__ = "0.1.0"
 
