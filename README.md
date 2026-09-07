@@ -19,11 +19,17 @@ print(tracker.report().summary())
 
 ```
 tokentab report
-=================
+===============
 calls           1
 total cost      $0.010500
 total tokens    1,500  (in 1,000 / out 500 / cache r 0 w 0)
 session budget  $0.010500 / $5.000000 (0.2%)
+
+by model
+  claude-sonnet-4-5  $    0.010500     1 calls       1,500 tok
+
+by tag
+  untagged  $    0.010500     1 calls       1,500 tok
 ```
 
 ---
@@ -46,11 +52,16 @@ costs you nothing instead of your monthly budget.
 
 ## Install
 
+**Not on PyPI yet.** Install from this repository:
+
 ```bash
-pip install tokentab
+pip install git+https://github.com/ojas2005/tokentab.git
 ```
 
-The core is pure standard library. Extras are opt-in:
+Once it is published, `pip install tokentab` will work the same way.
+
+Requires **Python 3.9 or newer** and nothing else — the core imports only the
+standard library. Extras are opt-in, and everything works without them:
 
 ```bash
 pip install 'tokentab[tiktoken]'   # exact token counts for OpenAI models
@@ -60,7 +71,140 @@ pip install 'tokentab[langchain]'  # LangChain callback handler
 pip install 'tokentab[all]'        # everything
 ```
 
-Python 3.9+.
+To install an extra straight from the repository, put the extra on the URL:
+
+```bash
+pip install 'tokentab[all] @ git+https://github.com/ojas2005/tokentab.git'
+```
+
+Check it worked — this needs no API key and makes no network call:
+
+```bash
+tokentab price claude-sonnet-4-5 -i 1000 -o 500
+```
+
+```
+model     claude-sonnet-4-5  ->  claude-sonnet-4-5 (anthropic)
+rates     $3.0/Mtok in, $15.0/Mtok out
+cost      $0.010500
+```
+
+---
+
+## How it works
+
+tokentab sits around your existing API call. You keep using your provider's SDK
+exactly as you do now; tokentab only watches what goes in and what comes back.
+
+Every tracked call goes through the same four steps:
+
+**1. Count the prompt, before sending it.** tokentab counts the tokens in your
+messages — exactly, with `tiktoken` or Anthropic's `count_tokens` endpoint when
+installed, and otherwise with a built-in character heuristic accurate to roughly
+10–20%.
+
+**2. Price it, and check the budget.** The token count is multiplied by that
+model's rate to get a dollar estimate. If that estimate would push you past a
+limit, tokentab raises `BudgetExceededError` **and your API call never
+happens** — so nothing is spent.
+
+**3. Your call runs, untouched.** tokentab does not wrap, retry or modify the
+request. If your provider raises, that exception reaches you unchanged and
+nothing is recorded.
+
+**4. Read the real cost from the response.** Providers report exact token counts
+in the response, so the recorded cost is the true one, not the estimate — cached
+tokens included, at their own rates.
+
+```
+   your messages
+        |
+        v
+  [1] count tokens  ---->  [2] price + check budget  --X-->  BudgetExceededError
+        |                                                    (nothing spent)
+        v
+  [3] your API call runs normally
+        |
+        v
+  [4] read usage from the response  ---->  exact cost recorded in the ledger
+```
+
+The estimate in step 2 exists only to make the block-before-spending decision.
+Once the response arrives, it is discarded in favour of the provider's own
+numbers. If a response carries no usage data — some streamed responses do not —
+the estimate is recorded instead and flagged `estimated=True`, so an
+approximate figure is never silently passed off as exact.
+
+---
+
+## Quickstart
+
+**1. Wrap the work in a tracker and give it a budget.**
+
+```python
+from tokentab import CostTracker
+
+with CostTracker(budget=5.00) as tracker:
+    ...
+```
+
+**2. Tell tokentab about each call.** The simplest way is to hand it the
+response you already have:
+
+```python
+import anthropic
+
+client = anthropic.Anthropic()
+
+with CostTracker(budget=5.00) as tracker:
+    response = client.messages.create(
+        model="claude-sonnet-4-5",
+        max_tokens=1000,
+        messages=[{"role": "user", "content": "Summarize this transcript."}],
+    )
+    tracker.record_response(response, "claude-sonnet-4-5", tag="summarize")
+
+    print(f"that call cost ${tracker.total_cost:.6f}")
+```
+
+That records real spend, but does not yet block anything.
+
+**3. To actually stop over-budget calls, put the call inside
+`tracker.call(...)`:**
+
+```python
+with CostTracker(budget=5.00, per_request=0.10) as tracker:
+    with tracker.call(
+        "claude-sonnet-4-5",
+        messages=messages,
+        expected_output_tokens=1000,   # your max_tokens
+    ) as call:
+        call.set_response(client.messages.create(...))
+```
+
+If the prompt plus the expected response would cost more than $0.10, or would
+take the session past $5.00, `BudgetExceededError` is raised here and
+`client.messages.create` is never reached.
+
+**4. See where the money went.**
+
+```python
+print(tracker.report().summary())      # the text block at the top of this README
+tracker.report().cost_by_tag()         # {'summarize': 0.0105}
+tracker.report().to_json()             # for logs
+tracker.report().to_dataframe()        # needs the pandas extra
+```
+
+Nothing above needs an API key for tokentab itself, and no data leaves your
+process.
+
+Two runnable end-to-end examples live in [`examples/`](examples/). Both use fake
+clients, so they need no key and no network:
+
+```bash
+python examples/quickstart.py
+python examples/langchain_agent.py
+```
 
 ---
 
