@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+- **MCP server** (`tokentab-mcp`), so Claude Code, Claude Desktop or any MCP
+  client can price calls, compare models, count tokens and plan budgets in
+  plain language. Seven read-only tools that run locally with no API key.
+  Installed with the new `tokentab[mcp]` extra, which needs Python 3.10+; the
+  library itself still supports 3.9.
+
 ## [0.1.0] - 2026-09-05
 
 Initial release.

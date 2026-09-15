@@ -32,7 +32,15 @@ tiktoken = ["tiktoken>=0.5"]
 anthropic = ["anthropic>=0.30"]
 pandas = ["pandas>=1.3"]
 langchain = ["langchain-core>=0.2"]
-all = ["tiktoken>=0.5", "anthropic>=0.30", "pandas>=1.3", "langchain-core>=0.2"]
+# The MCP SDK requires Python 3.10+; on 3.9 this extra installs nothing.
+mcp = ["mcp>=2; python_version >= '3.10'"]
+all = [
+    "tiktoken>=0.5",
+    "anthropic>=0.30",
+    "pandas>=1.3",
+    "langchain-core>=0.2",
+    "mcp>=2; python_version >= '3.10'",
+]
 dev = [
     "pytest>=7.0",
     "mypy>=1.8",
@@ -49,6 +57,7 @@ Changelog = "https://github.com/ojas2005/tokentab/blob/main/CHANGELOG.md"
 
 [project.scripts]
 tokentab = "tokentab.__main__:main"
+tokentab-mcp = "tokentab.mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tokentab"]
@@ -75,7 +84,7 @@ module = "tokentab.integrations.langchain"
 disallow_subclassing_any = false
 
 [[tool.mypy.overrides]]
-module = ["tiktoken.*", "pandas.*", "langchain_core.*", "anthropic.*"]
+module = ["tiktoken.*", "pandas.*", "langchain_core.*", "anthropic.*", "mcp.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

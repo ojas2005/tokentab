@@ -58,7 +58,7 @@ jobs:
         run: |
           python - <<'PY'
           import importlib.util as u
-          leaked = [m for m in ("tiktoken", "pandas", "langchain_core", "anthropic")
+          leaked = [m for m in ("tiktoken", "pandas", "langchain_core", "anthropic", "mcp")
                     if u.find_spec(m) is not None]
           assert not leaked, f"optional packages installed by the core: {leaked}"
           PY

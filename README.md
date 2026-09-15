@@ -494,6 +494,49 @@ tokentab meta                     # as-of date and source note for bundled price
 
 ---
 
+## Ask Claude about costs (MCP server)
+
+tokentab ships an MCP server, so Claude Code, Claude Desktop or any MCP client
+can answer cost questions for you. It runs locally, needs no API key, and every
+tool is read-only.
+
+It needs **Python 3.10+** (the MCP SDK's minimum; the library itself still
+supports 3.9):
+
+```bash
+pip install 'tokentab[mcp] @ git+https://github.com/ojas2005/tokentab.git'
+```
+
+```bash
+claude mcp add -s user tokentab -- tokentab-mcp
+```
+
+If you installed into a virtualenv, give the full path instead, e.g.
+`-- /path/to/venv/bin/tokentab-mcp`. Then ask in any Claude Code session:
+
+> What would 40k input and 2k output tokens cost on Sonnet, GPT-4o and Gemini Flash?
+>
+> How many gpt-4o-mini calls fit in $5 if each is 3k tokens in and 500 out?
+>
+> How many tokens is this prompt, and what would it cost on Opus with a 1,000-token reply?
+
+| Tool | What it answers |
+| --- | --- |
+| `estimate_cost` | The cost of a call from token counts, cached tokens included |
+| `estimate_prompt_cost` | Counts a prompt and prices it, plus an allowance for the reply |
+| `compare_models` | The same workload across models, cheapest first |
+| `count_tokens` | Tokens in some text (exact for OpenAI models when tiktoken is installed) |
+| `plan_budget` | How many calls of a given size fit in a budget |
+| `get_model_pricing`, `list_models` | The rates in the pricing table |
+
+To use your own rates, point the server at a pricing file:
+
+```bash
+claude mcp add -s user tokentab -e TOKENTAB_PRICING_FILE=/path/to/rates.json -- tokentab-mcp
+```
+
+---
+
 ## Design notes
 
 - **Zero required dependencies.** The core imports only the standard library.
